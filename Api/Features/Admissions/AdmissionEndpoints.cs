@@ -1,10 +1,12 @@
-namespace Api.Features.Admissions;
-
 using Api.Common.Extensions;
 using Application.Abstractions.Messaging;
 using Application.Features.Admissions.CreateAdmission;
 using Application.Features.Admissions.GetAdmissionById;
+using Application.Features.Admissions.GetAllAdmissions;
 using Domain.Common;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Api.Features.Admissions;
 
 public static class AdmissionEndpoints
 {
@@ -20,6 +22,10 @@ public static class AdmissionEndpoints
         group.MapGet("/{id:guid}", GetById)
             .WithName("GetAdmissionById")
             .WithSummary("Get admission by ID with courses");
+
+        group.MapGet("/", GetAll)
+            .WithName("GetAllAdmissions")
+            .WithSummary("Get all admissions");
     }
 
     private static async Task<IResult> Create(
@@ -39,6 +45,17 @@ public static class AdmissionEndpoints
         CancellationToken cancellationToken)
     {
         var query = new GetAdmissionByIdQuery(id);
+        var result = await handler.HandleAsync(query, cancellationToken);
+        return result.IsSuccess
+            ? TypedResults.Ok(result.Value)
+            : result.ToProblemDetails();
+    }
+
+    private static async Task<IResult> GetAll(
+        [FromServices] IQueryHandler<GetAllAdmissionsQuery, Result<GetAllAdmissionsResponse>> handler,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetAllAdmissionsQuery();
         var result = await handler.HandleAsync(query, cancellationToken);
         return result.IsSuccess
             ? TypedResults.Ok(result.Value)
