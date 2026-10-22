@@ -1,29 +1,30 @@
-using Application.Features.Courses.UpdateCourse;
-using Api.Features.Admissions;
-using Api.Features.Courses;
-using Api.Features.Students;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Features.Admissions.CreateAdmission;
 using Application.Features.Admissions.GetAdmissionById;
 using Application.Features.Admissions.GetAllAdmissions;
 using Application.Features.Courses.CreateCourse;
+using Application.Features.Courses.DeleteCourse;
 using Application.Features.Courses.GetAllCourses;
 using Application.Features.Courses.GetCourseById;
+using Application.Features.Courses.UpdateCourse;
 using Application.Features.Students.CreateStudent;
 using Application.Features.Students.GetAllStudents;
 using Application.Features.Students.GetStudentById;
+using Api.Features.Admissions;
+using Api.Features.Courses;
+using Api.Features.Students;
 using Domain.Common;
 using FluentValidation;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
-using Application.Features.Courses.DeleteCourse;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Database
+// Database - Configured for SQLite using Connection Strings
 builder.Services.AddDbContext<IAppDbContext, AppDbContext>(options =>
-    options.UseInMemoryDatabase("VerticalSliceDb"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("Database")));
 
 // Validators
 builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
@@ -32,16 +33,18 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateStudentValidator>();
 builder.Services.AddScoped<ICommandHandler<CreateStudentCommand, Result<CreateStudentResponse>>, CreateStudentCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetAllStudentsQuery, Result<GetAllStudentsResponse>>, GetAllStudentsQueryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetStudentByIdQuery, Result<GetStudentByIdResponse>>, GetStudentByIdQueryHandler>();
+
 builder.Services.AddScoped<ICommandHandler<CreateCourseCommand, Result<CreateCourseResponse>>, CreateCourseCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetAllCoursesQuery, Result<GetAllCoursesResponse>>, GetAllCoursesQueryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetCourseByIdQuery, Result<GetCourseByIdResponse>>, GetCourseByIdQueryHandler>();
-builder.Services.AddScoped<ICommandHandler<CreateAdmissionCommand, Result<CreateAdmissionResponse>>, CreateAdmissionCommandHandler>();
-builder.Services.AddScoped<IQueryHandler<GetAdmissionByIdQuery, Result<GetAdmissionByIdResponse>>, GetAdmissionByIdQueryHandler>();
- builder.Services.AddScoped<IQueryHandler<GetAllAdmissionsQuery, Result<GetAllAdmissionsResponse>>, GetAllAdmissionsQueryHandler>();
 builder.Services.AddScoped<ICommandHandler<UpdateCourseCommand, Result<UpdateCourseResponse>>, UpdateCourseCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<DeleteCourseCommand, Result>, DeleteCourseCommandHandler>();
 
-// API
+builder.Services.AddScoped<ICommandHandler<CreateAdmissionCommand, Result<CreateAdmissionResponse>>, CreateAdmissionCommandHandler>();
+builder.Services.AddScoped<IQueryHandler<GetAdmissionByIdQuery, Result<GetAdmissionByIdResponse>>, GetAdmissionByIdQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetAllAdmissionsQuery, Result<GetAllAdmissionsResponse>>, GetAllAdmissionsQueryHandler>();
+
+// API Documentation
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi(options =>
 {
@@ -55,55 +58,8 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 
-// Seed data
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Students.AddRange(
-        new Domain.Entities.Student
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "John",
-            LastName = "Doe",
-            Email = "john.doe@example.com",
-            DateOfBirth = new DateTime(2000, 1, 15)
-        },
-        new Domain.Entities.Student
-        {
-            Id = Guid.NewGuid(),
-            FirstName = "Jane",
-            LastName = "Smith",
-            Email = "jane.smith@example.com",
-            DateOfBirth = new DateTime(2001, 5, 20)
-        }
-    );
-
-    dbContext.Courses.AddRange(
-        new Domain.Entities.Course
-        {
-            Id = Guid.NewGuid(),
-            Title = "Introduction to Programming",
-            Code = "CS101",
-            Credits = 3
-        },
-        new Domain.Entities.Course
-        {
-            Id = Guid.NewGuid(),
-            Title = "Data Structures",
-            Code = "CS201",
-            Credits = 4
-        },
-        new Domain.Entities.Course
-        {
-            Id = Guid.NewGuid(),
-            Title = "Database Systems",
-            Code = "CS301",
-            Credits = 3
-        }
-    );
-
-    dbContext.SaveChanges();
-}
+// Automatically apply SQLite migrations and run idempotent seeding
+//await app.Services.MigrateAndSeedAsync();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
