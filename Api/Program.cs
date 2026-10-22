@@ -59,11 +59,11 @@ builder.Services.AddOpenApi(options =>
 var app = builder.Build();
 
 // Automatically apply SQLite migrations and run idempotent seeding
-//await app.Services.MigrateAndSeedAsync();
+await app.Services.MigrateAndSeedAsync();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
-{
+{       
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
