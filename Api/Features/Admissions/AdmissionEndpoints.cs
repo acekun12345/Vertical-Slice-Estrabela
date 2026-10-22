@@ -10,6 +10,8 @@ namespace Api.Features.Admissions;
 
 public static class AdmissionEndpoints
 {
+    private const string GetByIdRouteName = "GetAdmissionById";
+
     public static void MapAdmissionEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/admissions")
@@ -20,7 +22,7 @@ public static class AdmissionEndpoints
             .WithSummary("Create a new admission with courses");
 
         group.MapGet("/{id:guid}", GetById)
-            .WithName("GetAdmissionById")
+            .WithName(GetByIdRouteName)
             .WithSummary("Get admission by ID with courses");
 
         group.MapGet("/", GetAll)
@@ -35,7 +37,7 @@ public static class AdmissionEndpoints
     {
         var result = await handler.HandleAsync(command, cancellationToken);
         return result.IsSuccess
-            ? TypedResults.CreatedAtRoute(result.Value, "GetAdmissionById", new { id = result.Value!.Id })
+            ? TypedResults.CreatedAtRoute(result.Value, GetByIdRouteName, new { id = result.Value!.Id })
             : result.ToProblemDetails();
     }
 

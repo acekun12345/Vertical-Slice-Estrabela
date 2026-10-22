@@ -9,6 +9,7 @@ using Domain.Common;
 
 public static class StudentEndpoints
 {
+    private const string GetByIdRouteName = "GetStudentById";
     public static void MapStudentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/students")

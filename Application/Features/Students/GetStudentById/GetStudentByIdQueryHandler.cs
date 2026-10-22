@@ -19,6 +19,7 @@ public sealed class GetStudentByIdQueryHandler(IAppDbContext dbContext)
         {
             return Result<GetStudentByIdResponse>.Failure(
                 Error.NotFound("Student.NotFound", "Student not found."));
+            
         }
 
         var response = new GetStudentByIdResponse(
